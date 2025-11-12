@@ -307,7 +307,8 @@ export default function AdminScreen({ onBack }: AdminScreenProps) {
                     <div className="p-3 bg-muted/50 rounded-lg border border-border">
                       <p className="text-xs text-muted-foreground">
                         ⚠️ <strong>Използва се GitHub Spark вграден модел</strong><br/>
-                        Анализът ще отнеме по-дълго време (90-150 сек.) и може да срещнете rate limit грешки при много заявки. За по-бързо и стабилно изпълнение, използвайте собствен API ключ.
+                        Избраният модел ({model}) ще се използва чрез GitHub Spark.<br/>
+                        Анализът ще отнеме по-дълго време (2-3 минути) и може да срещнете rate limit грешки при много заявки. За по-бързо и стабилно изпълнение, използвайте собствен API ключ.
                       </p>
                     </div>
                   )}
