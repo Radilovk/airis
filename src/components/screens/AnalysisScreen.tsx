@@ -134,7 +134,7 @@ export default function AnalysisScreen({
     if (useCustomAPI) {
       addLog('info', `🔧 Режим: Собствен API (${provider} - ${actualModel})`)
     } else {
-      addLog('info', `🔧 Режим: GitHub Spark вграден модел (gpt-4o-mini за по-малко заявки)`)
+      addLog('info', `🔧 Режим: GitHub Spark вграден модел (${actualModel})`)
     }
     
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
@@ -157,7 +157,8 @@ export default function AnalysisScreen({
             jsonMode
           )
         } else {
-          response = await window.spark.llm(prompt, 'gpt-4o-mini', jsonMode)
+          // Use configured model from settings even for GitHub Spark
+          response = await window.spark.llm(prompt, actualModel, jsonMode)
         }
         
         if (response && response.length > 0) {
@@ -319,7 +320,7 @@ export default function AnalysisScreen({
       addLog('success', 'Ляв ирис анализиран успешно')
       console.log('✅ [АНАЛИЗ] Ляв ирис анализиран успешно:', leftAnalysis)
       
-      const waitTime = aiConfig?.useCustomKey ? 3000 : 60000
+      const waitTime = aiConfig?.useCustomKey ? 3000 : 30000
       addLog('info', `⏳ Изчакване ${waitTime/1000} сек. за избягване на rate limit...`)
       await sleep(waitTime)
       
@@ -332,7 +333,7 @@ export default function AnalysisScreen({
       addLog('success', 'Десен ирис анализиран успешно')
       console.log('✅ [АНАЛИЗ] Десен ирис анализиран успешно:', rightAnalysis)
       
-      const waitTime2 = aiConfig?.useCustomKey ? 3000 : 60000
+      const waitTime2 = aiConfig?.useCustomKey ? 3000 : 30000
       addLog('info', `⏳ Изчакване ${waitTime2/1000} сек. за избягване на rate limit...`)
       await sleep(waitTime2)
       
@@ -349,7 +350,7 @@ export default function AnalysisScreen({
       addLog('success', `Препоръки генерирани успешно (${recommendations.length} бр.)`)
       console.log('✅ [АНАЛИЗ] Препоръки генерирани успешно:', recommendations)
       
-      const waitTime3 = aiConfig?.useCustomKey ? 3000 : 60000
+      const waitTime3 = aiConfig?.useCustomKey ? 3000 : 30000
       addLog('info', `⏳ Изчакване ${waitTime3/1000} сек. за избягване на rate limit...`)
       await sleep(waitTime3)
       
@@ -753,7 +754,7 @@ JSON:
                     <p className="text-xs text-muted-foreground leading-relaxed">
                       ℹ️ {aiConfig?.useCustomKey 
                         ? `Процесът с вашия ${aiConfig.provider === 'gemini' ? 'Gemini' : 'OpenAI'} API ключ отнема 30-60 секунди.` 
-                        : 'Процесът с GitHub Spark модела (gpt-4o-mini) отнема 4-6 минути. Приложението изчаква 60 секунди между заявките за избягване на rate limit.'}
+                        : `Процесът с GitHub Spark модела (${aiConfig?.model || 'gpt-4o'}) отнема 2-3 минути. Приложението изчаква 30 секунди между заявките за избягване на rate limit.`}
                     </p>
                   </div>
                 </div>
