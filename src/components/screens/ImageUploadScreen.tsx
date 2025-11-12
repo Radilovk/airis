@@ -2,9 +2,10 @@ import { useState, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
-import { Camera, Upload, CheckCircle, ArrowRight, X } from '@phosphor-icons/react'
+import { Camera, Upload, CheckCircle, ArrowRight, X, PencilSimple } from '@phosphor-icons/react'
 import { motion } from 'framer-motion'
 import { toast } from 'sonner'
+import IrisCropEditor from '@/components/iris/IrisCropEditor'
 import type { IrisImage } from '@/types'
 
 interface ImageUploadScreenProps {
@@ -16,7 +17,7 @@ interface ImageUploadScreenProps {
 export default function ImageUploadScreen({ onComplete, initialLeft, initialRight }: ImageUploadScreenProps) {
   const [leftImage, setLeftImage] = useState<IrisImage | null>(initialLeft)
   const [rightImage, setRightImage] = useState<IrisImage | null>(initialRight)
-  const [currentSide, setCurrentSide] = useState<'left' | 'right' | null>(null)
+  const [editingImage, setEditingImage] = useState<{ dataUrl: string; side: 'left' | 'right' } | null>(null)
   
   const leftInputRef = useRef<HTMLInputElement>(null)
   const rightInputRef = useRef<HTMLInputElement>(null)
@@ -30,17 +31,36 @@ export default function ImageUploadScreen({ onComplete, initialLeft, initialRigh
     const reader = new FileReader()
     reader.onload = (e) => {
       const dataUrl = e.target?.result as string
-      const image: IrisImage = { dataUrl, side }
-      
-      if (side === 'left') {
-        setLeftImage(image)
-      } else {
-        setRightImage(image)
-      }
-      
-      toast.success(`${side === 'left' ? 'Ляв' : 'Десен'} ирис качен успешно`)
+      // Open crop editor instead of directly setting the image
+      setEditingImage({ dataUrl, side })
     }
     reader.readAsDataURL(file)
+  }
+  
+  const handleCropSave = (croppedDataUrl: string) => {
+    if (!editingImage) return
+    
+    const image: IrisImage = { dataUrl: croppedDataUrl, side: editingImage.side }
+    
+    if (editingImage.side === 'left') {
+      setLeftImage(image)
+    } else {
+      setRightImage(image)
+    }
+    
+    setEditingImage(null)
+    toast.success(`${editingImage.side === 'left' ? 'Ляв' : 'Десен'} ирис запазен успешно`)
+  }
+  
+  const handleCropCancel = () => {
+    setEditingImage(null)
+  }
+  
+  const handleEditImage = (side: 'left' | 'right') => {
+    const image = side === 'left' ? leftImage : rightImage
+    if (image) {
+      setEditingImage({ dataUrl: image.dataUrl, side })
+    }
   }
 
   const handleDrop = (side: 'left' | 'right', e: React.DragEvent) => {
@@ -135,6 +155,15 @@ export default function ImageUploadScreen({ onComplete, initialLeft, initialRigh
                     <Button
                       size="sm"
                       variant="secondary"
+                      onClick={() => handleEditImage('left')}
+                      className="gap-2"
+                    >
+                      <PencilSimple size={16} />
+                      Редактирай
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="secondary"
                       onClick={() => removeImage('left')}
                       className="gap-2"
                     >
@@ -190,6 +219,15 @@ export default function ImageUploadScreen({ onComplete, initialLeft, initialRigh
                     <Button
                       size="sm"
                       variant="secondary"
+                      onClick={() => handleEditImage('right')}
+                      className="gap-2"
+                    >
+                      <PencilSimple size={16} />
+                      Редактирай
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="secondary"
                       onClick={() => removeImage('right')}
                       className="gap-2"
                     >
@@ -223,6 +261,16 @@ export default function ImageUploadScreen({ onComplete, initialLeft, initialRigh
           </Button>
         </motion.div>
       </div>
+      
+      {/* Crop Editor Modal */}
+      {editingImage && (
+        <IrisCropEditor
+          imageDataUrl={editingImage.dataUrl}
+          side={editingImage.side}
+          onSave={handleCropSave}
+          onCancel={handleCropCancel}
+        />
+      )}
     </div>
   )
 }
