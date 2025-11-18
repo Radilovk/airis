@@ -7,6 +7,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Sparkle, Warning, Bug } from '@phosphor-icons/react'
 import { motion } from 'framer-motion'
 import type { QuestionnaireData, IrisImage, AnalysisReport, IrisAnalysis, AIModelConfig, IridologyTextbook } from '@/types'
+import { DEFAULT_AI_PROMPT, DEFAULT_IRIDOLOGY_MANUAL } from '@/lib/defaults'
 
 interface AnalysisScreenProps {
   questionnaireData: QuestionnaireData
@@ -41,6 +42,8 @@ export default function AnalysisScreen({
   })
   
   const [textbooks] = useStorage<IridologyTextbook[]>('iridology-textbooks', [])
+  const [iridologyManual] = useStorage<string>('iridology-manual', '')
+  const [aiPromptTemplate] = useStorage<string>('ai-prompt-template', '')
 
   const addLog = (level: LogEntry['level'], message: string) => {
     const timestamp = new Date().toLocaleTimeString('bg-BG', { hour12: false })
@@ -476,6 +479,14 @@ export default function AnalysisScreen({
       console.log(`📝 [ИРИС ${side}] BMI: ${bmi}, Възраст: ${questionnaire.age}, Пол: ${genderName}`)
       console.log(`📝 [ИРИС ${side}] Цели: ${goalsText}`)
       
+      // Load iridology manual context
+      let manualContext = ''
+      if (iridologyManual) {
+        addLog('info', 'Зареждане на иридологично ръководство...')
+        manualContext = '\n\nИРИДОЛОГИЧНО РЪКОВОДСТВО:\n\n' + iridologyManual.substring(0, 3000)
+        addLog('success', `Ръководство заредено (${manualContext.length} символа)`)
+      }
+      
       let textbookContext = ''
       if (textbooks && textbooks.length > 0) {
         addLog('info', `Зареждане на ${textbooks.length} учебника/учебници за контекст...`)
@@ -487,44 +498,57 @@ export default function AnalysisScreen({
       }
       
       addLog('info', 'Подготовка на prompt за LLM...')
-      const prompt = (window.spark.llmPrompt as unknown as (strings: TemplateStringsArray, ...values: any[]) => string)`Ти си иридолог. Анализирай ${sideName} ирис.
-
-Пациент: Възраст ${questionnaire.age}, Пол ${genderName}, BMI ${bmi}
-Цели: ${goalsText}
-Оплаквания: ${complaintsText}
-${textbookContext}
-
-Анализирай 8-12 зони по часовника (12:00 горе): Мозък, Щитовидна, Белодробна, Черен дроб, Стомах, Дебело черво, Урогенитална, Бъбреци, Далак, Сърце, Ендокринна, Нервна.
-
-За всяка зона: status (normal/attention/concern), findings (до 60 символа).
-
-Идентифицирай 2-4 артефакта: лакуни, крипти, пигменти, радиални линии, пръстени.
-
-Генерирай 6 system scores (0-100): Храносмилателна, Имунна, Нервна, Сърдечно-съдова, Детоксикация, Ендокринна.
-
-ВАЖНО:
-- Върни САМО валиден JSON
-- Кратки описания (до 60 символа)
-- БЕЗ нови редове (\\n) в текстове
-- БЕЗ вътрешни двойни кавички
-- Използвай единични кавички ' вместо двойни " в текстове
-
-JSON формат:
-{
-  "analysis": {
-    "zones": [{"id": 1, "name": "име", "organ": "орган", "status": "normal", "findings": "текст до 60 символа", "angle": [0, 30]}],
-    "artifacts": [{"type": "тип", "location": "локация", "description": "текст до 60 символа", "severity": "low"}],
-    "overallHealth": 75,
-    "systemScores": [{"system": "система", "score": 80, "description": "текст до 60 символа"}]
-  }
-}`
-
-      addLog('info', `Изпращане на prompt до LLM (${prompt.length} символа)...`)
+      
+      // Use the custom prompt template or default
+      const promptTemplate = aiPromptTemplate || DEFAULT_AI_PROMPT
+      
+      // Generate a simple hash from the image data for consistency
+      const imageHash = iris.dataUrl.substring(0, 100)
+      
+      // Replace template variables with actual values
+      let prompt = promptTemplate
+        .replace(/\{\{side\}\}/g, sideName)
+        .replace(/\{\{age\}\}/g, String(questionnaire.age))
+        .replace(/\{\{gender\}\}/g, genderName)
+        .replace(/\{\{weight\}\}/g, String(questionnaire.weight))
+        .replace(/\{\{height\}\}/g, String(questionnaire.height))
+        .replace(/\{\{bmi\}\}/g, bmi)
+        .replace(/\{\{goals\}\}/g, goalsText)
+        .replace(/\{\{complaints\}\}/g, complaintsText)
+        .replace(/\{\{imageHash\}\}/g, imageHash.substring(0, 20))
+        .replace(/\{\{healthStatus\}\}/g, 'N/A')
+        .replace(/\{\{dietaryHabits\}\}/g, 'N/A')
+        .replace(/\{\{stressLevel\}\}/g, 'N/A')
+        .replace(/\{\{sleepHours\}\}/g, 'N/A')
+        .replace(/\{\{sleepQuality\}\}/g, 'N/A')
+        .replace(/\{\{activityLevel\}\}/g, 'N/A')
+        .replace(/\{\{medications\}\}/g, 'Няма')
+        .replace(/\{\{allergies\}\}/g, 'Няма')
+      
+      // Handle conditional sections for left/right iris
+      const isRight = side === 'right'
+      const isLeft = side === 'left'
+      
+      // Remove sections for the opposite iris
+      if (isRight) {
+        prompt = prompt.replace(/\{\{#if isLeft\}\}[\s\S]*?\{\{\/if\}\}/g, '')
+        prompt = prompt.replace(/\{\{#if isRight\}\}/g, '').replace(/\{\{\/if\}\}/g, '')
+      } else {
+        prompt = prompt.replace(/\{\{#if isRight\}\}[\s\S]*?\{\{\/if\}\}/g, '')
+        prompt = prompt.replace(/\{\{#if isLeft\}\}/g, '').replace(/\{\{\/if\}\}/g, '')
+      }
+      
+      // Append context materials
+      prompt += manualContext + textbookContext
+      
+      const fullPrompt = (window.spark.llmPrompt as unknown as (strings: TemplateStringsArray, ...values: any[]) => string)`${prompt}`
+      
+      addLog('info', `Изпращане на prompt до LLM (${fullPrompt.length} символа)...`)
       console.log(`🤖 [ИРИС ${side}] Изпращане на prompt до LLM...`)
-      console.log(`📄 [ИРИС ${side}] Prompt дължина: ${prompt.length} символа`)
+      console.log(`📄 [ИРИС ${side}] Prompt дължина: ${fullPrompt.length} символа`)
       
       addLog('warning', 'Изчакване на отговор от AI модела... (това може да отнеме 10-30 сек)')
-      const response = await callLLMWithRetry(prompt, true)
+      const response = await callLLMWithRetry(fullPrompt, true)
       
       addLog('success', `Получен отговор от LLM (${response.length} символа)`)
       console.log(`✅ [ИРИС ${side}] Получен отговор от LLM`)
