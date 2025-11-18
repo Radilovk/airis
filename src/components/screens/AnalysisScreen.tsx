@@ -60,10 +60,11 @@ export default function AnalysisScreen({
 
   const callExternalAPI = async (
     prompt: string,
-    provider: 'openai' | 'gemini',
+    provider: 'openai' | 'gemini' | 'cloudflare',
     model: string,
     apiKey: string,
-    jsonMode: boolean = true
+    jsonMode: boolean = true,
+    accountId?: string
   ): Promise<string> => {
     addLog('info', `🔑 Използване на собствен API: ${provider} / ${model}`)
     
@@ -89,7 +90,7 @@ export default function AnalysisScreen({
 
       const data = await response.json()
       return data.choices[0].message.content
-    } else {
+    } else if (provider === 'gemini') {
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
         method: 'POST',
         headers: {
@@ -117,7 +118,43 @@ export default function AnalysisScreen({
 
       const data = await response.json()
       return data.candidates[0].content.parts[0].text
+    } else if (provider === 'cloudflare') {
+      // Cloudflare Workers AI
+      if (!accountId) {
+        throw new Error('Account ID е необходим за Cloudflare Workers AI')
+      }
+      
+      const response = await fetch(
+        `https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/run/${model}`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            messages: [
+              { 
+                role: 'user', 
+                content: jsonMode 
+                  ? `${prompt}\n\nВърни САМО валиден JSON обект, без допълнителен текст.`
+                  : prompt
+              }
+            ]
+          })
+        }
+      )
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        throw new Error(`Cloudflare API грешка ${response.status}: ${errorText}`)
+      }
+
+      const data = await response.json()
+      return data.result.response
     }
+    
+    throw new Error(`Неподдържан провайдер: ${provider}`)
   }
 
   const callLLMWithRetry = async (
@@ -154,7 +191,8 @@ export default function AnalysisScreen({
             provider,
             actualModel,
             aiConfig!.apiKey,
-            jsonMode
+            jsonMode,
+            aiConfig?.cloudflareAccountId
           )
         } else {
           // Check if Spark is available, otherwise require custom API

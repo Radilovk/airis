@@ -59,10 +59,11 @@ export interface AnalysisReport {
 }
 
 export interface AIModelConfig {
-  provider: 'openai' | 'gemini'
+  provider: 'openai' | 'gemini' | 'cloudflare'
   model: string
   apiKey: string
   useCustomKey: boolean
+  cloudflareAccountId?: string // For Cloudflare Workers AI
 }
 
 export interface IridologyTextbook {

@@ -8,6 +8,27 @@ A modern web application for iridology analysis powered by artificial intelligen
 
 Want to deploy this application so users can access it without GitHub registration?
 
+### 🆕 **Fully Autonomous Deployment**
+The application is now **completely autonomous** and can run independently of GitHub!
+
+📖 **[Autonomous Deployment Guide](./AUTONOMOUS_DEPLOYMENT.md)** - Complete guide for standalone deployment
+
+**Supported platforms:**
+- ✅ **Cloudflare Pages** + Workers AI (Recommended - Free!)
+- ✅ Netlify (Free)
+- ✅ Vercel (Free)
+- ✅ GitHub Pages (Free)
+- ✅ Any static hosting platform
+
+**AI Providers:**
+- OpenAI (GPT-4o, GPT-4 Turbo)
+- Google Gemini (Gemini 2.0, 1.5 Pro)
+- Cloudflare Workers AI (Llama, Mistral) ⭐ NEW
+
+---
+
+### Traditional GitHub Pages Deployment
+
 📖 **[See Deployment Guide (Bulgarian)](./DEPLOYMENT_GUIDE_BG.md)** - The fastest and easiest way to deploy!
 
 **Key benefits:**
