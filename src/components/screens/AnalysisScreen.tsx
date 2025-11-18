@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useKV } from '@github/spark/hooks'
+import { useStorage } from '@/hooks/useStorage'
 import { Card } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { Button } from '@/components/ui/button'
@@ -33,14 +33,14 @@ export default function AnalysisScreen({
   const [showDebug, setShowDebug] = useState(false)
   const [error, setError] = useState<string | null>(null)
   
-  const [aiConfig] = useKV<AIModelConfig>('ai-model-config', {
+  const [aiConfig] = useStorage<AIModelConfig>('ai-model-config', {
     provider: 'openai',
     model: 'gpt-4o',
     apiKey: '',
     useCustomKey: false
   })
   
-  const [textbooks] = useKV<IridologyTextbook[]>('iridology-textbooks', [])
+  const [textbooks] = useStorage<IridologyTextbook[]>('iridology-textbooks', [])
 
   const addLog = (level: LogEntry['level'], message: string) => {
     const timestamp = new Date().toLocaleTimeString('bg-BG', { hour12: false })
@@ -157,8 +157,13 @@ export default function AnalysisScreen({
             jsonMode
           )
         } else {
-          // Use configured model from settings even for GitHub Spark
-          response = await window.spark.llm(prompt, actualModel, jsonMode)
+          // Check if Spark is available, otherwise require custom API
+          if (typeof window !== 'undefined' && (window as any).spark?.llm) {
+            // Use configured model from settings even for GitHub Spark
+            response = await (window as any).spark.llm(prompt, actualModel, jsonMode)
+          } else {
+            throw new Error('Моля, конфигурирайте собствен API ключ в Админ панела. GitHub Spark не е наличен в автономен режим.')
+          }
         }
         
         if (response && response.length > 0) {

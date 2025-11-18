@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useKV } from '@github/spark/hooks'
+import { useStorage } from '@/hooks/useStorage'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -30,16 +30,15 @@ interface AdminScreenProps {
 }
 
 export default function AdminScreen({ onBack }: AdminScreenProps) {
-  const [aiConfig, setAiConfig] = useKV<AIModelConfig>('ai-model-config', {
+  const [aiConfig, setAiConfig] = useStorage<AIModelConfig>('ai-model-config', {
     provider: 'openai',
     model: 'gpt-4o',
     apiKey: '',
     useCustomKey: false
   })
   
-  const [textbooks, setTextbooks] = useKV<IridologyTextbook[]>('iridology-textbooks', [])
-  const [isOwner, setIsOwner] = useState(false)
-  const [loading, setLoading] = useState(true)
+  const [textbooks, setTextbooks] = useStorage<IridologyTextbook[]>('iridology-textbooks', [])
+  const [loading, setLoading] = useState(false)
   
   const [provider, setProvider] = useState<'openai' | 'gemini'>(aiConfig?.provider || 'openai')
   const [model, setModel] = useState(aiConfig?.model || 'gpt-4o')
@@ -50,10 +49,6 @@ export default function AdminScreen({ onBack }: AdminScreenProps) {
   const [textbookContent, setTextbookContent] = useState('')
 
   useEffect(() => {
-    checkOwnership()
-  }, [])
-
-  useEffect(() => {
     if (aiConfig) {
       setProvider(aiConfig.provider)
       setModel(aiConfig.model)
@@ -61,18 +56,6 @@ export default function AdminScreen({ onBack }: AdminScreenProps) {
       setUseCustomKey(aiConfig.useCustomKey)
     }
   }, [aiConfig])
-
-  const checkOwnership = async () => {
-    try {
-      const user = await window.spark.user()
-      setIsOwner(user?.isOwner || false)
-    } catch (error) {
-      console.error('Error checking ownership:', error)
-      setIsOwner(false)
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const handleSaveConfig = async () => {
     if (useCustomKey && !apiKey.trim()) {
@@ -156,41 +139,6 @@ export default function AdminScreen({ onBack }: AdminScreenProps) {
     if (bytes < 1024) return bytes + ' B'
     if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB'
     return (bytes / (1024 * 1024)).toFixed(2) + ' MB'
-  }
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Зареждане...</p>
-        </div>
-      </div>
-    )
-  }
-
-  if (!isOwner) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Warning className="w-6 h-6 text-destructive" />
-              Достъп отказан
-            </CardTitle>
-            <CardDescription>
-              Само собственикът на приложението има достъп до административния панел.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button onClick={onBack} className="w-full">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Назад към началото
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    )
   }
 
   const openaiModels = ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo']
