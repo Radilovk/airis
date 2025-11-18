@@ -349,9 +349,11 @@ export default function AnalysisScreen({
   const performAnalysis = async () => {
     try {
       addLog('info', 'Стартиране на анализ...')
+      addLog('info', `AI Конфигурация: ${aiConfig?.provider} / ${aiConfig?.model} (Собствен API: ${aiConfig?.useCustomKey ? 'Да' : 'Не'})`)
       addLog('info', `Данни от въпросник: Възраст ${questionnaireData.age}, Пол ${questionnaireData.gender}`)
       addLog('info', `Здравни цели: ${questionnaireData.goals.join(', ')}`)
       console.log('🚀 [АНАЛИЗ] Стартиране на анализ...')
+      console.log('🔧 [АНАЛИЗ] AI Конфигурация:', aiConfig)
       console.log('📊 [АНАЛИЗ] Данни от въпросник:', questionnaireData)
       
       setProgress(10)
