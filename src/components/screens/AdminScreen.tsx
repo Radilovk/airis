@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useKV } from '@github/spark/hooks'
+import { useStorage } from '@/hooks/useStorage'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -30,28 +30,24 @@ interface AdminScreenProps {
 }
 
 export default function AdminScreen({ onBack }: AdminScreenProps) {
-  const [aiConfig, setAiConfig] = useKV<AIModelConfig>('ai-model-config', {
+  const [aiConfig, setAiConfig] = useStorage<AIModelConfig>('ai-model-config', {
     provider: 'openai',
     model: 'gpt-4o',
     apiKey: '',
     useCustomKey: false
   })
   
-  const [textbooks, setTextbooks] = useKV<IridologyTextbook[]>('iridology-textbooks', [])
-  const [isOwner, setIsOwner] = useState(false)
-  const [loading, setLoading] = useState(true)
+  const [textbooks, setTextbooks] = useStorage<IridologyTextbook[]>('iridology-textbooks', [])
+  const [loading, setLoading] = useState(false)
   
-  const [provider, setProvider] = useState<'openai' | 'gemini'>(aiConfig?.provider || 'openai')
+  const [provider, setProvider] = useState<'openai' | 'gemini' | 'cloudflare'>(aiConfig?.provider || 'openai')
   const [model, setModel] = useState(aiConfig?.model || 'gpt-4o')
   const [apiKey, setApiKey] = useState(aiConfig?.apiKey || '')
   const [useCustomKey, setUseCustomKey] = useState(aiConfig?.useCustomKey || false)
+  const [cloudflareAccountId, setCloudflareAccountId] = useState(aiConfig?.cloudflareAccountId || '')
   
   const [textbookName, setTextbookName] = useState('')
   const [textbookContent, setTextbookContent] = useState('')
-
-  useEffect(() => {
-    checkOwnership()
-  }, [])
 
   useEffect(() => {
     if (aiConfig) {
@@ -59,24 +55,18 @@ export default function AdminScreen({ onBack }: AdminScreenProps) {
       setModel(aiConfig.model)
       setApiKey(aiConfig.apiKey)
       setUseCustomKey(aiConfig.useCustomKey)
+      setCloudflareAccountId(aiConfig.cloudflareAccountId || '')
     }
   }, [aiConfig])
-
-  const checkOwnership = async () => {
-    try {
-      const user = await window.spark.user()
-      setIsOwner(user?.isOwner || false)
-    } catch (error) {
-      console.error('Error checking ownership:', error)
-      setIsOwner(false)
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const handleSaveConfig = async () => {
     if (useCustomKey && !apiKey.trim()) {
       toast.error('Моля, въведете API ключ')
+      return
+    }
+
+    if (provider === 'cloudflare' && useCustomKey && !cloudflareAccountId.trim()) {
+      toast.error('Моля, въведете Cloudflare Account ID')
       return
     }
 
@@ -85,7 +75,8 @@ export default function AdminScreen({ onBack }: AdminScreenProps) {
         provider,
         model,
         apiKey: useCustomKey ? apiKey : '',
-        useCustomKey
+        useCustomKey,
+        cloudflareAccountId: provider === 'cloudflare' ? cloudflareAccountId : undefined
       }
       
       await setAiConfig(config)
@@ -158,43 +149,9 @@ export default function AdminScreen({ onBack }: AdminScreenProps) {
     return (bytes / (1024 * 1024)).toFixed(2) + ' MB'
   }
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Зареждане...</p>
-        </div>
-      </div>
-    )
-  }
-
-  if (!isOwner) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Warning className="w-6 h-6 text-destructive" />
-              Достъп отказан
-            </CardTitle>
-            <CardDescription>
-              Само собственикът на приложението има достъп до административния панел.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button onClick={onBack} className="w-full">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Назад към началото
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    )
-  }
-
   const openaiModels = ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo']
   const geminiModels = ['gemini-2.0-flash-exp', 'gemini-1.5-pro', 'gemini-1.5-flash']
+  const cloudflareModels = ['@cf/meta/llama-3.1-8b-instruct', '@cf/meta/llama-3.1-70b-instruct', '@cf/mistral/mistral-7b-instruct-v0.1']
 
   return (
     <div className="min-h-screen bg-background">
@@ -242,7 +199,7 @@ export default function AdminScreen({ onBack }: AdminScreenProps) {
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label>Доставчик на AI модел</Label>
-                  <RadioGroup value={provider} onValueChange={(v) => setProvider(v as 'openai' | 'gemini')}>
+                  <RadioGroup value={provider} onValueChange={(v) => setProvider(v as 'openai' | 'gemini' | 'cloudflare')}>
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="openai" id="openai" />
                       <Label htmlFor="openai" className="font-normal cursor-pointer">
@@ -253,6 +210,12 @@ export default function AdminScreen({ onBack }: AdminScreenProps) {
                       <RadioGroupItem value="gemini" id="gemini" />
                       <Label htmlFor="gemini" className="font-normal cursor-pointer">
                         Google Gemini (Gemini 2.0, Gemini 1.5)
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="cloudflare" id="cloudflare" />
+                      <Label htmlFor="cloudflare" className="font-normal cursor-pointer">
+                        Cloudflare Workers AI (Llama, Mistral)
                       </Label>
                     </div>
                   </RadioGroup>
@@ -273,9 +236,17 @@ export default function AdminScreen({ onBack }: AdminScreenProps) {
                             </SelectItem>
                           ))}
                         </>
-                      ) : (
+                      ) : provider === 'gemini' ? (
                         <>
                           {geminiModels.map((m) => (
+                            <SelectItem key={m} value={m}>
+                              {m}
+                            </SelectItem>
+                          ))}
+                        </>
+                      ) : (
+                        <>
+                          {cloudflareModels.map((m) => (
                             <SelectItem key={m} value={m}>
                               {m}
                             </SelectItem>
@@ -309,6 +280,8 @@ export default function AdminScreen({ onBack }: AdminScreenProps) {
                         ⚠️ <strong>Използва се GitHub Spark вграден модел</strong><br/>
                         Избраният модел ({model}) ще се използва чрез GitHub Spark.<br/>
                         Анализът ще отнеме по-дълго време (2-3 минути) и може да срещнете rate limit грешки при много заявки. За по-бързо и стабилно изпълнение, използвайте собствен API ключ.
+                        <br/><br/>
+                        <strong>⚠️ Важно:</strong> Приложението е конфигурирано за автономна работа. Ако GitHub Spark не е наличен, анализът няма да работи. Моля, конфигурирайте собствен API ключ.
                       </p>
                     </div>
                   )}
@@ -318,26 +291,55 @@ export default function AdminScreen({ onBack }: AdminScreenProps) {
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: 'auto' }}
                       exit={{ opacity: 0, height: 0 }}
-                      className="space-y-2"
+                      className="space-y-4"
                     >
-                      <Label htmlFor="api-key" className="flex items-center gap-2">
-                        <Key className="w-4 h-4" />
-                        API ключ
-                      </Label>
-                      <Input
-                        id="api-key"
-                        type="password"
-                        placeholder={provider === 'openai' ? 'sk-...' : 'AIza...'}
-                        value={apiKey}
-                        onChange={(e) => setApiKey(e.target.value)}
-                        className="font-mono"
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        {provider === 'openai' 
-                          ? 'Вашият OpenAI API ключ (започва с sk-)'
-                          : 'Вашият Google AI API ключ'
-                        }
-                      </p>
+                      <div className="space-y-2">
+                        <Label htmlFor="api-key" className="flex items-center gap-2">
+                          <Key className="w-4 h-4" />
+                          API ключ
+                        </Label>
+                        <Input
+                          id="api-key"
+                          type="password"
+                          placeholder={
+                            provider === 'openai' ? 'sk-...' : 
+                            provider === 'gemini' ? 'AIza...' :
+                            'cloudflare-api-token'
+                          }
+                          value={apiKey}
+                          onChange={(e) => setApiKey(e.target.value)}
+                          className="font-mono"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          {provider === 'openai' 
+                            ? 'Вашият OpenAI API ключ (започва с sk-)'
+                            : provider === 'gemini'
+                            ? 'Вашият Google AI API ключ'
+                            : 'Вашият Cloudflare API Token'
+                          }
+                        </p>
+                      </div>
+
+                      {provider === 'cloudflare' && (
+                        <div className="space-y-2">
+                          <Label htmlFor="cloudflare-account-id" className="flex items-center gap-2">
+                            <Key className="w-4 h-4" />
+                            Cloudflare Account ID
+                          </Label>
+                          <Input
+                            id="cloudflare-account-id"
+                            type="text"
+                            placeholder="32-character account ID"
+                            value={cloudflareAccountId}
+                            onChange={(e) => setCloudflareAccountId(e.target.value)}
+                            className="font-mono"
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            Намерете го в Cloudflare Dashboard → Workers & Pages → Overview
+                          </p>
+                        </div>
+                      )}
+
                       <div className="mt-3 p-3 bg-accent/10 rounded-lg border border-accent/20">
                         <p className="text-xs text-accent-foreground">
                           💡 <strong>Предимства на собствен API ключ:</strong>
@@ -345,7 +347,10 @@ export default function AdminScreen({ onBack }: AdminScreenProps) {
                         <ul className="text-xs text-accent-foreground/80 mt-2 space-y-1 list-disc list-inside">
                           <li>По-бързо време за анализ (30-60 сек. вместо 90-150 сек.)</li>
                           <li>Без GitHub Spark rate limit ограничения</li>
-                          <li>Възможност за избор на различни модели (включително Gemini)</li>
+                          <li>Възможност за избор на различни модели</li>
+                          {provider === 'cloudflare' && (
+                            <li>Cloudflare Workers AI е безплатен за малък обем заявки</li>
+                          )}
                         </ul>
                       </div>
                     </motion.div>

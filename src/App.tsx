@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useKV } from '@github/spark/hooks'
+import { useStorage } from '@/hooks/useStorage'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Toaster } from '@/components/ui/sonner'
 import WelcomeScreen from '@/components/screens/WelcomeScreen'
@@ -15,11 +15,11 @@ type Screen = 'welcome' | 'questionnaire' | 'upload' | 'analysis' | 'report' | '
 
 function App() {
   const [currentScreen, setCurrentScreen] = useState<Screen>('welcome')
-  const [questionnaireData, setQuestionnaireData] = useKV<QuestionnaireData | null>('questionnaire-data', null)
-  const [leftIris, setLeftIris] = useKV<IrisImage | null>('left-iris', null)
-  const [rightIris, setRightIris] = useKV<IrisImage | null>('right-iris', null)
-  const [analysisReport, setAnalysisReport] = useKV<AnalysisReport | null>('analysis-report', null)
-  const [history, setHistory] = useKV<AnalysisReport[]>('analysis-history', [])
+  const [questionnaireData, setQuestionnaireData] = useStorage<QuestionnaireData | null>('questionnaire-data', null)
+  const [leftIris, setLeftIris] = useStorage<IrisImage | null>('left-iris', null)
+  const [rightIris, setRightIris] = useStorage<IrisImage | null>('right-iris', null)
+  const [analysisReport, setAnalysisReport] = useStorage<AnalysisReport | null>('analysis-report', null)
+  const [history, setHistory] = useStorage<AnalysisReport[]>('analysis-history', [])
 
   const handleStartAnalysis = () => {
     setCurrentScreen('questionnaire')
