@@ -4,6 +4,29 @@ A modern web application for iridology analysis powered by artificial intelligen
 
 🌍 **For Bulgarian users:** See [README_BG.md](./README_BG.md)
 
+## 🎯 Fully Autonomous Application - NO Console Needed!
+
+✨ **This is a ready-to-use web application!**
+
+### Direct Usage (No npm, Node.js, or console commands required)
+
+1. **Download/clone the project**
+2. **Open `index.html` in your browser**
+3. **Done!** 🎉
+
+📖 **[Complete autonomous usage guide (NO console)](./AUTONOMOUS_USAGE_BG.md)** (in Bulgarian)
+
+### For public deployment
+
+Upload the entire project to:
+- 🌟 **Cloudflare Pages** (recommended - free)
+- Netlify, Vercel, GitHub Pages (free)
+- Any web server or hosting platform
+
+**Result:** Anyone can use the application from a browser, no installation needed!
+
+---
+
 ## 🚀 Quick Deployment
 
 Want to deploy this application so users can access it without GitHub registration?
