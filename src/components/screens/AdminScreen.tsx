@@ -79,9 +79,20 @@ export default function AdminScreen({ onBack }: AdminScreenProps) {
     if (!validModels.includes(model)) {
       setModel(validModels[0])
     }
+    
+    // Gemini and Cloudflare require custom API keys (GitHub Spark only supports OpenAI)
+    if (provider === 'gemini' || provider === 'cloudflare') {
+      setUseCustomKey(true)
+    }
   }, [provider])
 
   const handleSaveConfig = async () => {
+    // Gemini and Cloudflare require custom API keys
+    if ((provider === 'gemini' || provider === 'cloudflare') && !useCustomKey) {
+      toast.error(`${provider === 'gemini' ? 'Gemini' : 'Cloudflare'} изисква собствен API ключ. GitHub Spark поддържа само OpenAI модели.`)
+      return
+    }
+    
     if (useCustomKey && !apiKey.trim()) {
       toast.error('Моля, въведете API ключ')
       return
@@ -290,13 +301,16 @@ export default function AdminScreen({ onBack }: AdminScreenProps) {
                     <div className="space-y-0.5">
                       <Label htmlFor="use-custom-key">Използвай собствен API ключ</Label>
                       <p className="text-sm text-muted-foreground">
-                        Активирайте, за да използвате собствения си API ключ
+                        {provider === 'openai' 
+                          ? 'Активирайте, за да използвате собствения си API ключ'
+                          : '⚠️ Задължително за Gemini и Cloudflare (GitHub Spark поддържа само OpenAI)'}
                       </p>
                     </div>
                     <Switch
                       id="use-custom-key"
                       checked={useCustomKey}
                       onCheckedChange={setUseCustomKey}
+                      disabled={provider === 'gemini' || provider === 'cloudflare'}
                     />
                   </div>
 
@@ -307,7 +321,7 @@ export default function AdminScreen({ onBack }: AdminScreenProps) {
                         Избраният модел ({model}) ще се използва чрез GitHub Spark.<br/>
                         Анализът ще отнеме по-дълго време (2-3 минути) и може да срещнете rate limit грешки при много заявки. За по-бързо и стабилно изпълнение, използвайте собствен API ключ.
                         <br/><br/>
-                        <strong>⚠️ Важно:</strong> Приложението е конфигурирано за автономна работа. Ако GitHub Spark не е наличен, анализът няма да работи. Моля, конфигурирайте собствен API ключ.
+                        <strong>⚠️ Важно:</strong> GitHub Spark поддържа САМО OpenAI модели. За Gemini или Cloudflare е необходим собствен API ключ.
                       </p>
                     </div>
                   )}
