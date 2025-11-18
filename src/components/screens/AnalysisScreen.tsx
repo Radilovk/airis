@@ -168,6 +168,11 @@ export default function AnalysisScreen({
     const provider = aiConfig?.provider || 'openai'
     const actualModel = aiConfig?.model || 'gpt-4o'
     
+    // Validate configuration: Gemini and Cloudflare REQUIRE custom API keys
+    if ((provider === 'gemini' || provider === 'cloudflare') && !useCustomAPI) {
+      throw new Error(`${provider === 'gemini' ? 'Gemini' : 'Cloudflare'} изисква собствен API ключ. Моля, конфигурирайте го в Админ панела. GitHub Spark поддържа само OpenAI модели.`)
+    }
+    
     if (useCustomAPI) {
       addLog('info', `🔧 Режим: Собствен API (${provider} - ${actualModel})`)
     } else {
