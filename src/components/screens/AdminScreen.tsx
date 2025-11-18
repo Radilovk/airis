@@ -59,6 +59,27 @@ export default function AdminScreen({ onBack }: AdminScreenProps) {
     }
   }, [aiConfig])
 
+  // Update model when provider changes to ensure valid model selection
+  useEffect(() => {
+    const openaiModels = ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo']
+    const geminiModels = ['gemini-2.0-flash-exp', 'gemini-1.5-pro', 'gemini-1.5-flash']
+    const cloudflareModels = ['@cf/meta/llama-3.1-8b-instruct', '@cf/meta/llama-3.1-70b-instruct', '@cf/mistral/mistral-7b-instruct-v0.1']
+    
+    let validModels: string[] = []
+    if (provider === 'openai') {
+      validModels = openaiModels
+    } else if (provider === 'gemini') {
+      validModels = geminiModels
+    } else if (provider === 'cloudflare') {
+      validModels = cloudflareModels
+    }
+    
+    // If current model is not valid for the selected provider, set to first valid model
+    if (!validModels.includes(model)) {
+      setModel(validModels[0])
+    }
+  }, [provider])
+
   const handleSaveConfig = async () => {
     if (useCustomKey && !apiKey.trim()) {
       toast.error('Моля, въведете API ключ')
