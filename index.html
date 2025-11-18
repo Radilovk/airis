@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Иридологичен Анализ - Стартиране</title>
+    <title>Иридологичен Анализ - AI Диагностика</title>
+    <meta http-equiv="refresh" content="0; url=dist/index.html">
     <style>
         * {
             margin: 0;
@@ -24,7 +25,7 @@
             border-radius: 20px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             padding: 50px;
-            max-width: 600px;
+            max-width: 700px;
             text-align: center;
         }
         .icon {
@@ -54,44 +55,27 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        .instructions {
-            display: none;
+        .info {
             text-align: left;
-            margin-top: 30px;
-            padding: 20px;
-            background: #f9f9f9;
+            margin-top: 20px;
+            padding: 25px;
+            background: #f0f7ff;
             border-radius: 10px;
             border-left: 4px solid #667eea;
-        }
-        .instructions.show {
-            display: block;
-        }
-        .instructions h2 {
-            color: #667eea;
-            margin-bottom: 15px;
-            font-size: 20px;
-        }
-        .instructions ol {
-            margin-left: 20px;
             color: #555;
             line-height: 1.8;
         }
-        .instructions code {
-            background: #333;
-            color: #fff;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-family: 'Courier New', monospace;
+        .info h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 20px;
+            text-align: center;
         }
-        .error-message {
-            color: #e53e3e;
-            margin-top: 20px;
-            font-weight: 500;
+        .info p {
+            margin-bottom: 12px;
         }
-        .success-message {
-            color: #38a169;
-            margin-top: 20px;
-            font-weight: 500;
+        .info strong {
+            color: #333;
         }
         .btn {
             display: inline-block;
@@ -103,6 +87,7 @@
             border-radius: 8px;
             font-weight: 600;
             transition: background 0.3s;
+            cursor: pointer;
         }
         .btn:hover {
             background: #5568d3;
@@ -114,53 +99,28 @@
         <div class="icon">👁️</div>
         <h1>Иридологичен Анализ - AI Диагностика</h1>
         
-        <div id="loading" class="loading">
+        <div class="loading">
             <div class="spinner"></div>
-            <p>Проверка за built версия...</p>
+            <p>Зареждане на приложението...</p>
         </div>
 
-        <div id="instructions" class="instructions">
-            <h2>⚠️ Приложението не е built</h2>
-            <p style="margin-bottom: 15px;">За да стартирате приложението, моля изпълнете следните стъпки:</p>
-            <ol>
-                <li>Отворете терминал/команден прозорец в тази папка</li>
-                <li>Изпълнете: <code>npm install</code></li>
-                <li>Изпълнете: <code>npm run build</code></li>
-                <li>Презаредете тази страница или отворете <code>dist/index.html</code></li>
-            </ol>
-            <p style="margin-top: 20px; color: #666;">
-                <strong>Забележка:</strong> За разработка използвайте <code>npm run dev</code>
+        <div class="info">
+            <h2>✨ Напълно Автономно Приложение</h2>
+            <p><strong>Това е готово за употреба уеб приложение!</strong></p>
+            <p>🎯 <strong>Няма нужда от инсталация или конзола</strong> - приложението автоматично се стартира.</p>
+            <p>📱 Работи директно в браузъра - отваря се файлът <code>dist/index.html</code></p>
+            <p>🌐 За споделяне: качете целия проект на всеки уеб сървър или платформа за хостинг</p>
+            <p style="margin-top: 20px; text-align: center;">
+                <a href="dist/index.html" class="btn">Отвори приложението ръчно</a>
             </p>
         </div>
     </div>
 
     <script>
-        async function checkAndRedirect() {
-            try {
-                // Try to fetch dist/index.html
-                const response = await fetch('dist/index.html', { method: 'HEAD' });
-                
-                if (response.ok) {
-                    // Success! Redirect to the built version
-                    document.getElementById('loading').innerHTML = 
-                        '<div class="success-message">✅ Намерена е built версия! Пренасочване...</div>';
-                    
-                    // Redirect after a short delay
-                    setTimeout(() => {
-                        window.location.href = 'dist/index.html';
-                    }, 1000);
-                } else {
-                    throw new Error('dist/index.html not found');
-                }
-            } catch (error) {
-                // dist/index.html doesn't exist or can't be accessed
-                document.getElementById('loading').style.display = 'none';
-                document.getElementById('instructions').classList.add('show');
-            }
-        }
-
-        // Run check when page loads
-        checkAndRedirect();
+        // Automatic redirect to the application
+        setTimeout(() => {
+            window.location.href = 'dist/index.html';
+        }, 100);
     </script>
 </body>
 </html>
