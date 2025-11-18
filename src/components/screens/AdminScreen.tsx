@@ -49,6 +49,18 @@ export default function AdminScreen({ onBack }: AdminScreenProps) {
   const [textbookName, setTextbookName] = useState('')
   const [textbookContent, setTextbookContent] = useState('')
 
+  // Define model lists as constants
+  const openaiModels = ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo']
+  const geminiModels = ['gemini-2.0-flash-exp', 'gemini-1.5-pro', 'gemini-1.5-flash']
+  const cloudflareModels = ['@cf/meta/llama-3.1-8b-instruct', '@cf/meta/llama-3.1-70b-instruct', '@cf/mistral/mistral-7b-instruct-v0.1']
+
+  const getValidModelsForProvider = (prov: 'openai' | 'gemini' | 'cloudflare'): string[] => {
+    if (prov === 'openai') return openaiModels
+    if (prov === 'gemini') return geminiModels
+    if (prov === 'cloudflare') return cloudflareModels
+    return openaiModels
+  }
+
   useEffect(() => {
     if (aiConfig) {
       setProvider(aiConfig.provider)
@@ -61,18 +73,7 @@ export default function AdminScreen({ onBack }: AdminScreenProps) {
 
   // Update model when provider changes to ensure valid model selection
   useEffect(() => {
-    const openaiModels = ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo']
-    const geminiModels = ['gemini-2.0-flash-exp', 'gemini-1.5-pro', 'gemini-1.5-flash']
-    const cloudflareModels = ['@cf/meta/llama-3.1-8b-instruct', '@cf/meta/llama-3.1-70b-instruct', '@cf/mistral/mistral-7b-instruct-v0.1']
-    
-    let validModels: string[] = []
-    if (provider === 'openai') {
-      validModels = openaiModels
-    } else if (provider === 'gemini') {
-      validModels = geminiModels
-    } else if (provider === 'cloudflare') {
-      validModels = cloudflareModels
-    }
+    const validModels = getValidModelsForProvider(provider)
     
     // If current model is not valid for the selected provider, set to first valid model
     if (!validModels.includes(model)) {
@@ -88,6 +89,14 @@ export default function AdminScreen({ onBack }: AdminScreenProps) {
 
     if (provider === 'cloudflare' && useCustomKey && !cloudflareAccountId.trim()) {
       toast.error('Моля, въведете Cloudflare Account ID')
+      return
+    }
+
+    // Validate model is compatible with provider
+    const validModels = getValidModelsForProvider(provider)
+    
+    if (!validModels.includes(model)) {
+      toast.error(`Моделът "${model}" не е валиден за ${provider}. Моля, изберете валиден модел.`)
       return
     }
 
@@ -169,10 +178,6 @@ export default function AdminScreen({ onBack }: AdminScreenProps) {
     if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB'
     return (bytes / (1024 * 1024)).toFixed(2) + ' MB'
   }
-
-  const openaiModels = ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo']
-  const geminiModels = ['gemini-2.0-flash-exp', 'gemini-1.5-pro', 'gemini-1.5-flash']
-  const cloudflareModels = ['@cf/meta/llama-3.1-8b-instruct', '@cf/meta/llama-3.1-70b-instruct', '@cf/mistral/mistral-7b-instruct-v0.1']
 
   return (
     <div className="min-h-screen bg-background">
