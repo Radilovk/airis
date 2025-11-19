@@ -102,7 +102,7 @@ export default function IrisVisualization({ analysis }: IrisVisualizationProps) 
               strokeDasharray="4,4"
             />
 
-            {analysis.zones.map((zone) => (
+            {(analysis.zones ?? []).map((zone) => (
               <g key={zone.id}>
                 <path
                   d={describeArc(centerX, centerY, radius, zone.angle[0], zone.angle[1])}
@@ -225,21 +225,21 @@ export default function IrisVisualization({ analysis }: IrisVisualizationProps) 
           <div className="w-4 h-4 rounded-full bg-green-500/30 border-2 border-green-500/60 mx-auto mb-2" />
           <p className="text-xs font-medium">Норма</p>
           <p className="text-xs text-muted-foreground">
-            {analysis.zones.filter(z => z.status === 'normal').length} зони
+            {(analysis.zones ?? []).filter(z => z.status === 'normal').length} зони
           </p>
         </div>
         <div className="text-center">
           <div className="w-4 h-4 rounded-full bg-yellow-500/30 border-2 border-yellow-500/80 mx-auto mb-2" />
           <p className="text-xs font-medium">Внимание</p>
           <p className="text-xs text-muted-foreground">
-            {analysis.zones.filter(z => z.status === 'attention').length} зони
+            {(analysis.zones ?? []).filter(z => z.status === 'attention').length} зони
           </p>
         </div>
         <div className="text-center">
           <div className="w-4 h-4 rounded-full bg-red-500/30 border-2 border-red-500/80 mx-auto mb-2" />
           <p className="text-xs font-medium">Притеснение</p>
           <p className="text-xs text-muted-foreground">
-            {analysis.zones.filter(z => z.status === 'concern').length} зони
+            {(analysis.zones ?? []).filter(z => z.status === 'concern').length} зони
           </p>
         </div>
       </div>

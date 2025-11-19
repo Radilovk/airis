@@ -89,8 +89,8 @@ export default function HistoryScreen({ onViewReport, onBack }: HistoryScreenPro
             <div className="grid gap-6">
               {historyList.map((report, idx) => {
                 const avgHealth = Math.round((report.leftIris.overallHealth + report.rightIris.overallHealth) / 2)
-                const concernZones = report.leftIris.zones.filter(z => z.status !== 'normal').length +
-                                    report.rightIris.zones.filter(z => z.status !== 'normal').length
+                const concernZones = (report.leftIris.zones ?? []).filter(z => z.status !== 'normal').length +
+                                    (report.rightIris.zones ?? []).filter(z => z.status !== 'normal').length
                 
                 return (
                   <motion.div
