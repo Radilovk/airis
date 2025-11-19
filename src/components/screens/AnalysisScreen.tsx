@@ -611,13 +611,13 @@ export default function AnalysisScreen({
       addLog('info', 'Стартиране генериране на препоръки...')
       console.log('💊 [ПРЕПОРЪКИ] Стартиране генериране на препоръки...')
       
-      const leftFindings = JSON.stringify(leftAnalysis.zones.filter(z => z.status !== 'normal'))
-      const rightFindings = JSON.stringify(rightAnalysis.zones.filter(z => z.status !== 'normal'))
+      const leftFindings = JSON.stringify((leftAnalysis.zones ?? []).filter(z => z.status !== 'normal'))
+      const rightFindings = JSON.stringify((rightAnalysis.zones ?? []).filter(z => z.status !== 'normal'))
       const goalsText = questionnaire.goals.join(', ')
       const complaintsText = questionnaire.complaints || 'Няма'
       
-      addLog('info', `Проблемни зони ляв ирис: ${leftAnalysis.zones.filter(z => z.status !== 'normal').length}`)
-      addLog('info', `Проблемни зони десен ирис: ${rightAnalysis.zones.filter(z => z.status !== 'normal').length}`)
+      addLog('info', `Проблемни зони ляв ирис: ${(leftAnalysis.zones ?? []).filter(z => z.status !== 'normal').length}`)
+      addLog('info', `Проблемни зони десен ирис: ${(rightAnalysis.zones ?? []).filter(z => z.status !== 'normal').length}`)
       console.log('📊 [ПРЕПОРЪКИ] Ляв ирис находки (не-нормални зони):', leftFindings)
       console.log('📊 [ПРЕПОРЪКИ] Десен ирис находки (не-нормални зони):', rightFindings)
       
@@ -708,8 +708,8 @@ JSON:
       addLog('info', 'Стартиране генериране на резюме...')
       console.log('📝 [РЕЗЮМЕ] Стартиране генериране на резюме...')
       
-      const leftZones = leftAnalysis.zones.filter(z => z.status !== 'normal').map(z => z.organ).join(', ')
-      const rightZones = rightAnalysis.zones.filter(z => z.status !== 'normal').map(z => z.organ).join(', ')
+      const leftZones = (leftAnalysis.zones ?? []).filter(z => z.status !== 'normal').map(z => z.organ).join(', ')
+      const rightZones = (rightAnalysis.zones ?? []).filter(z => z.status !== 'normal').map(z => z.organ).join(', ')
       const goalsText = questionnaire.goals.join(', ')
       
       addLog('info', `Общо здраве: Ляв ${leftAnalysis.overallHealth}/100, Десен ${rightAnalysis.overallHealth}/100`)

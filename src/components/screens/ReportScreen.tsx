@@ -69,36 +69,36 @@ ${report.summary}
 Общо здравословно състояние: ${avgHealth}/100
 Ляв ирис: ${report.leftIris.overallHealth}/100
 Десен ирис: ${report.rightIris.overallHealth}/100
-Зони за внимание: ${report.leftIris.zones.filter(z => z.status !== 'normal').length + report.rightIris.zones.filter(z => z.status !== 'normal').length}
+Зони за внимание: ${(report.leftIris.zones ?? []).filter(z => z.status !== 'normal').length + (report.rightIris.zones ?? []).filter(z => z.status !== 'normal').length}
 
 ЛЯВ ИРИС - ЗОНИ С ОТКЛОНЕНИЯ
-${report.leftIris.zones.filter(z => z.status !== 'normal').map(z => `
+${(report.leftIris.zones ?? []).filter(z => z.status !== 'normal').map(z => `
 ${z.name} (${z.organ})
 Статус: ${z.status === 'attention' ? 'Внимание' : 'Притеснение'}
 Находки: ${z.findings}
 `).join('\n')}
 
 ДЕСЕН ИРИС - ЗОНИ С ОТКЛОНЕНИЯ
-${report.rightIris.zones.filter(z => z.status !== 'normal').map(z => `
+${(report.rightIris.zones ?? []).filter(z => z.status !== 'normal').map(z => `
 ${z.name} (${z.organ})
 Статус: ${z.status === 'attention' ? 'Внимание' : 'Притеснение'}
 Находки: ${z.findings}
 `).join('\n')}
 
 ПРЕПОРЪКИ ЗА ХРАНЕНЕ
-${report.recommendations.filter(r => r.category === 'diet').map(r => `
+${(report.recommendations ?? []).filter(r => r.category === 'diet').map(r => `
 ${r.title} (Приоритет: ${r.priority === 'high' ? 'Висок' : r.priority === 'medium' ? 'Среден' : 'Нисък'})
 ${r.description}
 `).join('\n')}
 
 ПРЕПОРЪКИ ЗА ХРАНИТЕЛНИ ДОБАВКИ
-${report.recommendations.filter(r => r.category === 'supplement').map(r => `
+${(report.recommendations ?? []).filter(r => r.category === 'supplement').map(r => `
 ${r.title} (Приоритет: ${r.priority === 'high' ? 'Висок' : r.priority === 'medium' ? 'Среден' : 'Нисък'})
 ${r.description}
 `).join('\n')}
 
 ПРЕПОРЪКИ ЗА НАЧИН НА ЖИВОТ
-${report.recommendations.filter(r => r.category === 'lifestyle').map(r => `
+${(report.recommendations ?? []).filter(r => r.category === 'lifestyle').map(r => `
 ${r.title} (Приоритет: ${r.priority === 'high' ? 'Висок' : r.priority === 'medium' ? 'Среден' : 'Нисък'})
 ${r.description}
 `).join('\n')}
@@ -118,7 +118,7 @@ ${r.description}
   }
 
   const handleShare = () => {
-    const shareText = `Завърших иридологичен анализ! Общо здраве: ${avgHealth}/100. Получих ${report.recommendations.length} персонализирани препоръки.`
+    const shareText = `Завърших иридологичен анализ! Общо здраве: ${avgHealth}/100. Получих ${(report.recommendations ?? []).length} персонализирани препоръки.`
     
     if (navigator.share) {
       navigator.share({
@@ -225,8 +225,8 @@ ${r.description}
               <Card className="p-6">
                 <div className="text-center">
                   <div className="text-5xl font-bold text-primary mb-2">
-                    {report.leftIris.zones.filter(z => z.status !== 'normal').length + 
-                     report.rightIris.zones.filter(z => z.status !== 'normal').length}
+                    {(report.leftIris.zones ?? []).filter(z => z.status !== 'normal').length + 
+                     (report.rightIris.zones ?? []).filter(z => z.status !== 'normal').length}
                   </div>
                   <div className="text-sm text-muted-foreground">Зони за Внимание</div>
                 </div>
@@ -234,7 +234,7 @@ ${r.description}
               <Card className="p-6">
                 <div className="text-center">
                   <div className="text-5xl font-bold text-primary mb-2">
-                    {report.leftIris.artifacts.length + report.rightIris.artifacts.length}
+                    {(report.leftIris.artifacts ?? []).length + (report.rightIris.artifacts ?? []).length}
                   </div>
                   <div className="text-sm text-muted-foreground">Идентифицирани Артефакти</div>
                 </div>
@@ -406,16 +406,16 @@ ${r.description}
                     </p>
                   </div>
                   
-                  {report.recommendations.length > 0 && (
+                  {(report.recommendations ?? []).length > 0 && (
                     <div className="space-y-2">
                       <div className="flex items-center justify-between text-sm">
                         <span className="font-medium">Напредък</span>
                         <span className="font-semibold">
-                          {completedRecommendations.size} / {report.recommendations.length}
+                          {completedRecommendations.size} / {(report.recommendations ?? []).length}
                         </span>
                       </div>
                       <Progress 
-                        value={(completedRecommendations.size / report.recommendations.length) * 100} 
+                        value={(completedRecommendations.size / (report.recommendations ?? []).length) * 100} 
                         className="h-2"
                       />
                     </div>
@@ -424,7 +424,7 @@ ${r.description}
               </Card>
 
               <div className="space-y-4">
-                {report.recommendations.map((rec, idx) => (
+                {(report.recommendations ?? []).map((rec, idx) => (
                   <motion.div
                     key={idx}
                     initial={{ opacity: 0, y: 20 }}
@@ -440,7 +440,7 @@ ${r.description}
                 ))}
               </div>
 
-              {report.recommendations.length === 0 && (
+              {(report.recommendations ?? []).length === 0 && (
                 <Card className="p-12 text-center">
                   <p className="text-muted-foreground">Няма налични препоръки</p>
                 </Card>
