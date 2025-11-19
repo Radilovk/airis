@@ -568,9 +568,23 @@ export default function AnalysisScreen({
         throw new Error(`Невалиден формат на отговор - липсва 'analysis' property`)
       }
       
-      const result = {
+      // Validate that analysis has required array properties
+      if (!parsed.analysis.zones) {
+        addLog('warning', `Липсва 'zones' property в анализа - използване на празен масив`)
+        console.warn(`⚠️ [ИРИС ${side}] ПРЕДУПРЕЖДЕНИЕ: Липсва 'zones' property`)
+      }
+      if (!parsed.analysis.artifacts) {
+        addLog('warning', `Липсва 'artifacts' property в анализа - използване на празен масив`)
+        console.warn(`⚠️ [ИРИС ${side}] ПРЕДУПРЕЖДЕНИЕ: Липсва 'artifacts' property`)
+      }
+      
+      // Ensure required properties exist with defaults
+      const result: IrisAnalysis = {
         side,
-        ...parsed.analysis
+        zones: parsed.analysis.zones || [],
+        artifacts: parsed.analysis.artifacts || [],
+        overallHealth: parsed.analysis.overallHealth || 50,
+        systemScores: parsed.analysis.systemScores || []
       }
       
       addLog('success', `Анализ завършен: ${result.zones.length} зони, ${result.artifacts.length} артефакта`)
@@ -661,6 +675,13 @@ JSON:
         addLog('error', 'Липсва "recommendations" property!')
         console.error('❌ [ПРЕПОРЪКИ] ГРЕШКА: Липсва "recommendations" property!')
         throw new Error('Невалиден формат на отговор - липсва "recommendations" property')
+      }
+      
+      // Ensure recommendations is an array
+      if (!Array.isArray(parsed.recommendations)) {
+        addLog('warning', 'Recommendations не е масив - опит за конвертиране')
+        console.warn('⚠️ [ПРЕПОРЪКИ] ПРЕДУПРЕЖДЕНИЕ: Recommendations не е масив')
+        parsed.recommendations = [parsed.recommendations]
       }
       
       addLog('success', `Генерирани ${parsed.recommendations.length} препоръки`)
