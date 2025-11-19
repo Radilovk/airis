@@ -8,7 +8,7 @@ export default function HealthProgressChart({ currentHealth }: HealthProgressCha
   // Generate 6-month forecast data
   const generateForecastData = () => {
     const months = ['Текущо', 'Месец 1', 'Месец 2', 'Месец 3', 'Месец 4', 'Месец 5', 'Месец 6']
-    const data = []
+    const data: Array<{ month: string; projected: number; optimal: number }> = []
     
     let health = currentHealth
     const improvementRate = (100 - currentHealth) / 6 * 0.7 // 70% improvement potential over 6 months
@@ -21,7 +21,7 @@ export default function HealthProgressChart({ currentHealth }: HealthProgressCha
       data.push({
         month: months[i],
         projected: Math.round(health),
-        optimal: Math.min(100, currentHealth + (100 - currentHealth) * (i / 6))
+        optimal: Math.round(Math.min(100, currentHealth + (100 - currentHealth) * (i / 6)))
       })
     }
     
