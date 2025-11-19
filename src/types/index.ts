@@ -47,6 +47,19 @@ export interface Recommendation {
   title: string
   description: string
   priority: 'high' | 'medium' | 'low'
+  completed?: boolean
+}
+
+export interface NutritionData {
+  recommended: string[]
+  avoid: string[]
+}
+
+export interface TimelinePhase {
+  phase: number
+  title: string
+  duration: string
+  actions: string[]
 }
 
 export interface AnalysisReport {
@@ -56,6 +69,8 @@ export interface AnalysisReport {
   rightIris: IrisAnalysis
   recommendations: Recommendation[]
   summary: string
+  nutritionData?: NutritionData
+  timeline?: TimelinePhase[]
 }
 
 export interface AIModelConfig {

@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Progress } from '@/components/ui/progress'
 import { 
   FileText, 
   Download, 
@@ -18,6 +19,11 @@ import type { AnalysisReport } from '@/types'
 import IrisVisualization from '@/components/report/IrisVisualization'
 import SystemScoresChart from '@/components/report/SystemScoresChart'
 import RecommendationCard from '@/components/report/RecommendationCard'
+import HealthProgressChart from '@/components/report/HealthProgressChart'
+import NutritionChart from '@/components/report/NutritionChart'
+import ZoneStatusPieChart from '@/components/report/ZoneStatusPieChart'
+import ZoneHeatmap from '@/components/report/ZoneHeatmap'
+import ActionTimeline from '@/components/report/ActionTimeline'
 
 interface ReportScreenProps {
   report: AnalysisReport
@@ -26,6 +32,17 @@ interface ReportScreenProps {
 
 export default function ReportScreen({ report, onRestart }: ReportScreenProps) {
   const [activeTab, setActiveTab] = useState('overview')
+  const [completedRecommendations, setCompletedRecommendations] = useState<Set<number>>(new Set())
+
+  const handleToggleRecommendation = (index: number) => {
+    const newCompleted = new Set(completedRecommendations)
+    if (newCompleted.has(index)) {
+      newCompleted.delete(index)
+    } else {
+      newCompleted.add(index)
+    }
+    setCompletedRecommendations(newCompleted)
+  }
 
   const handleExport = () => {
     const reportText = `
@@ -176,8 +193,9 @@ ${r.description}
 
       <div className="container max-w-7xl mx-auto px-4 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="overview">Преглед</TabsTrigger>
+            <TabsTrigger value="visualizations">Визуализации</TabsTrigger>
             <TabsTrigger value="left">Ляв Ирис</TabsTrigger>
             <TabsTrigger value="right">Десен Ирис</TabsTrigger>
             <TabsTrigger value="recommendations">Препоръки</TabsTrigger>
@@ -230,6 +248,49 @@ ${r.description}
                 rightScores={report.rightIris.systemScores}
               />
             </Card>
+          </TabsContent>
+
+          <TabsContent value="visualizations" className="space-y-8">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+              className="space-y-8"
+            >
+              <Card className="p-6">
+                <HealthProgressChart currentHealth={avgHealth} />
+              </Card>
+
+              <Card className="p-6">
+                <ZoneStatusPieChart 
+                  leftZones={report.leftIris.zones}
+                  rightZones={report.rightIris.zones}
+                />
+              </Card>
+
+              <div className="grid md:grid-cols-2 gap-6">
+                <Card className="p-6">
+                  <ZoneHeatmap zones={report.leftIris.zones} side="left" />
+                </Card>
+                <Card className="p-6">
+                  <ZoneHeatmap zones={report.rightIris.zones} side="right" />
+                </Card>
+              </div>
+
+              <Card className="p-6">
+                <NutritionChart 
+                  nutritionData={report.nutritionData}
+                  recommendations={report.recommendations}
+                />
+              </Card>
+
+              <Card className="p-6">
+                <ActionTimeline 
+                  timeline={report.timeline}
+                  recommendations={report.recommendations}
+                />
+              </Card>
+            </motion.div>
           </TabsContent>
 
           <TabsContent value="left" className="space-y-6">
@@ -337,10 +398,29 @@ ${r.description}
           <TabsContent value="recommendations">
             <div className="space-y-6">
               <Card className="p-6 bg-gradient-to-br from-primary/5 to-accent/5">
-                <h2 className="text-2xl font-bold mb-2">Персонализирани Препоръки</h2>
-                <p className="text-muted-foreground">
-                  Базирани на вашия иридологичен анализ, препоръчваме следните стъпки за подобряване на здравето
-                </p>
+                <div className="space-y-4">
+                  <div>
+                    <h2 className="text-2xl font-bold mb-2">Персонализирани Препоръки</h2>
+                    <p className="text-muted-foreground">
+                      Базирани на вашия иридологичен анализ, препоръчваме следните стъпки за подобряване на здравето
+                    </p>
+                  </div>
+                  
+                  {report.recommendations.length > 0 && (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="font-medium">Напредък</span>
+                        <span className="font-semibold">
+                          {completedRecommendations.size} / {report.recommendations.length}
+                        </span>
+                      </div>
+                      <Progress 
+                        value={(completedRecommendations.size / report.recommendations.length) * 100} 
+                        className="h-2"
+                      />
+                    </div>
+                  )}
+                </div>
               </Card>
 
               <div className="space-y-4">
@@ -351,7 +431,11 @@ ${r.description}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: idx * 0.05 }}
                   >
-                    <RecommendationCard recommendation={rec} index={idx} />
+                    <RecommendationCard 
+                      recommendation={rec} 
+                      index={idx} 
+                      onToggle={handleToggleRecommendation}
+                    />
                   </motion.div>
                 ))}
               </div>

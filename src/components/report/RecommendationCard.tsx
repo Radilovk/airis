@@ -1,15 +1,27 @@
+import { useState } from 'react'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
-import { CheckCircle, Warning, Info } from '@phosphor-icons/react'
+import { CheckCircle, Warning, Info, Check } from '@phosphor-icons/react'
+import { motion } from 'framer-motion'
 import type { Recommendation } from '@/types'
 
 interface RecommendationCardProps {
   recommendation: Recommendation
   index: number
+  onToggle?: (index: number) => void
 }
 
-export default function RecommendationCard({ recommendation, index }: RecommendationCardProps) {
+export default function RecommendationCard({ recommendation, index, onToggle }: RecommendationCardProps) {
+  const [isCompleted, setIsCompleted] = useState(recommendation.completed || false)
+
+  const handleToggle = () => {
+    const newState = !isCompleted
+    setIsCompleted(newState)
+    if (onToggle) {
+      onToggle(index)
+    }
+  }
   const getPriorityConfig = (priority: 'high' | 'medium' | 'low') => {
     const configs = {
       high: { 
@@ -50,18 +62,34 @@ export default function RecommendationCard({ recommendation, index }: Recommenda
   const Icon = config.icon
 
   return (
-    <Card className="p-5 hover:shadow-md transition-all border-l-4" style={{
-      borderLeftColor: recommendation.priority === 'high' ? 'rgb(239, 68, 68)' : 
-                       recommendation.priority === 'medium' ? 'rgb(234, 179, 8)' : 
-                       'rgb(59, 130, 246)'
-    }}>
-      <div className="flex items-start gap-4">
-        <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center ${
-          recommendation.priority === 'high' ? 'bg-red-100' :
-          recommendation.priority === 'medium' ? 'bg-yellow-100' :
-          'bg-blue-100'
-        }`}>
-          <Icon size={20} weight="duotone" className={config.iconColor} />
+    <motion.div
+      initial={{ opacity: 0.6 }}
+      animate={{ opacity: isCompleted ? 0.5 : 1 }}
+      transition={{ duration: 0.3 }}
+    >
+      <Card className={`p-5 hover:shadow-md transition-all border-l-4 relative ${
+        isCompleted ? 'bg-muted/30' : ''
+      }`} style={{
+        borderLeftColor: recommendation.priority === 'high' ? 'rgb(239, 68, 68)' : 
+                         recommendation.priority === 'medium' ? 'rgb(234, 179, 8)' : 
+                         'rgb(59, 130, 246)'
+      }}>
+        <div className="flex items-start gap-4">
+        <div 
+          className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center cursor-pointer transition-all ${
+            isCompleted 
+              ? 'bg-primary' 
+              : recommendation.priority === 'high' ? 'bg-red-100' :
+                recommendation.priority === 'medium' ? 'bg-yellow-100' :
+                'bg-blue-100'
+          }`}
+          onClick={handleToggle}
+        >
+          {isCompleted ? (
+            <Check size={20} weight="bold" className="text-primary-foreground" />
+          ) : (
+            <Icon size={20} weight="duotone" className={config.iconColor} />
+          )}
         </div>
 
         <div className="flex-1 space-y-3">
@@ -81,9 +109,18 @@ export default function RecommendationCard({ recommendation, index }: Recommenda
             </Badge>
           </div>
 
-          <p className="text-sm text-muted-foreground leading-relaxed">
+          <p className={`text-sm leading-relaxed ${
+            isCompleted ? 'line-through text-muted-foreground' : 'text-muted-foreground'
+          }`}>
             {recommendation.description}
           </p>
+          
+          {isCompleted && (
+            <div className="flex items-center gap-2 text-xs text-primary font-medium">
+              <CheckCircle size={14} weight="fill" />
+              <span>Завършено</span>
+            </div>
+          )}
 
           <div className="space-y-1.5">
             <div className="flex items-center justify-between text-xs">
@@ -95,5 +132,6 @@ export default function RecommendationCard({ recommendation, index }: Recommenda
         </div>
       </div>
     </Card>
+    </motion.div>
   )
 }
