@@ -24,11 +24,15 @@ import {
   Warning,
   FileText,
   ClipboardText,
-  ListChecks
+  ListChecks,
+  Image as ImageIcon
 } from '@phosphor-icons/react'
 import { motion } from 'framer-motion'
 import type { AIModelConfig, IridologyTextbook } from '@/types'
 import { DEFAULT_AI_PROMPT, DEFAULT_IRIDOLOGY_MANUAL } from '@/lib/defaults'
+import AIPromptTab from './admin/AIPromptTab'
+import IridologyManualTab from './admin/IridologyManualTab'
+import CustomOverlayTab from './admin/CustomOverlayTab'
 
 interface AdminScreenProps {
   onBack: () => void
@@ -43,8 +47,6 @@ export default function AdminScreen({ onBack }: AdminScreenProps) {
   })
   
   const [textbooks, setTextbooks] = useStorage<IridologyTextbook[]>('iridology-textbooks', [])
-  const [iridologyManual, setIridologyManual] = useStorage<string>('iridology-manual', DEFAULT_IRIDOLOGY_MANUAL)
-  const [aiPromptTemplate, setAiPromptTemplate] = useStorage<string>('ai-prompt-template', DEFAULT_AI_PROMPT)
   const [loading, setLoading] = useState(false)
   
   const [provider, setProvider] = useState<'openai' | 'gemini' | 'cloudflare'>(aiConfig?.provider || 'openai')
@@ -55,9 +57,6 @@ export default function AdminScreen({ onBack }: AdminScreenProps) {
   
   const [textbookName, setTextbookName] = useState('')
   const [textbookContent, setTextbookContent] = useState('')
-  
-  const [editedManual, setEditedManual] = useState(iridologyManual || DEFAULT_IRIDOLOGY_MANUAL)
-  const [editedPrompt, setEditedPrompt] = useState(aiPromptTemplate || DEFAULT_AI_PROMPT)
 
   // Define model lists as constants
   const openaiModels = ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo']
@@ -80,14 +79,6 @@ export default function AdminScreen({ onBack }: AdminScreenProps) {
       setCloudflareAccountId(aiConfig.cloudflareAccountId || '')
     }
   }, [aiConfig])
-  
-  useEffect(() => {
-    setEditedManual(iridologyManual || DEFAULT_IRIDOLOGY_MANUAL)
-  }, [iridologyManual])
-  
-  useEffect(() => {
-    setEditedPrompt(aiPromptTemplate || DEFAULT_AI_PROMPT)
-  }, [aiPromptTemplate])
 
   // Update model when provider changes to ensure valid model selection
   useEffect(() => {
@@ -207,36 +198,6 @@ export default function AdminScreen({ onBack }: AdminScreenProps) {
     if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB'
     return (bytes / (1024 * 1024)).toFixed(2) + ' MB'
   }
-  
-  const handleSaveManual = async () => {
-    try {
-      await setIridologyManual(editedManual)
-      toast.success('Иридологичното ръководство е запазено успешно')
-    } catch (error) {
-      console.error('Error saving manual:', error)
-      toast.error('Грешка при запазване на ръководството')
-    }
-  }
-  
-  const handleRestoreManual = () => {
-    setEditedManual(DEFAULT_IRIDOLOGY_MANUAL)
-    toast.info('Ръководството е възстановено към默認ната версия')
-  }
-  
-  const handleSavePrompt = async () => {
-    try {
-      await setAiPromptTemplate(editedPrompt)
-      toast.success('AI Prompt шаблонът е запазен успешно')
-    } catch (error) {
-      console.error('Error saving prompt:', error)
-      toast.error('Грешка при запазване на промпта')
-    }
-  }
-  
-  const handleRestorePrompt = () => {
-    setEditedPrompt(DEFAULT_AI_PROMPT)
-    toast.info('Промптът е възстановен към默認ната версия')
-  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -255,7 +216,7 @@ export default function AdminScreen({ onBack }: AdminScreenProps) {
         </div>
 
         <Tabs defaultValue="ai-model" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 lg:grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5 lg:grid-cols-5">
             <TabsTrigger value="ai-model" className="flex items-center gap-2">
               <Brain className="w-4 h-4" />
               <span className="hidden sm:inline">AI Модел</span>
@@ -267,6 +228,10 @@ export default function AdminScreen({ onBack }: AdminScreenProps) {
             <TabsTrigger value="prompt" className="flex items-center gap-2">
               <FileText className="w-4 h-4" />
               <span className="hidden sm:inline">AI Prompt</span>
+            </TabsTrigger>
+            <TabsTrigger value="overlay" className="flex items-center gap-2">
+              <ImageIcon className="w-4 h-4" />
+              <span className="hidden sm:inline">Overlay</span>
             </TabsTrigger>
             <TabsTrigger value="changelog" className="flex items-center gap-2">
               <ListChecks className="w-4 h-4" />
@@ -475,96 +440,17 @@ export default function AdminScreen({ onBack }: AdminScreenProps) {
 
           {/* Iridology Manual Tab */}
           <TabsContent value="manual" className="space-y-6 mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <BookOpen className="w-5 h-5 text-primary" />
-                  Иридологично ръководство
-                </CardTitle>
-                <CardDescription>
-                  Редактирайте иридологичното ръководство, което се използва от AI за анализ
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="manual-editor">Съдържание на ръководството</Label>
-                  <Textarea
-                    id="manual-editor"
-                    value={editedManual}
-                    onChange={(e) => setEditedManual(e.target.value)}
-                    className="min-h-[500px] font-mono text-sm"
-                    placeholder="Иридологично ръководство..."
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Това ръководство се използва от AI при анализ на ирисовите изображения
-                  </p>
-                </div>
-                
-                <div className="flex gap-2">
-                  <Button onClick={handleSaveManual} className="flex-1">
-                    <CheckCircle className="w-4 h-4 mr-2" />
-                    Запази промените
-                  </Button>
-                  <Button onClick={handleRestoreManual} variant="outline">
-                    <ArrowLeft className="w-4 h-4 mr-2" />
-                    Възстанови по подразбиране
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+            <IridologyManualTab />
           </TabsContent>
 
           {/* AI Prompt Template Tab */}
           <TabsContent value="prompt" className="space-y-6 mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-primary" />
-                  AI Prompt шаблон
-                </CardTitle>
-                <CardDescription>
-                  Редактирайте AI prompt шаблона за персонализиране на анализа
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="p-3 bg-accent/10 rounded-lg border border-accent/20">
-                  <p className="text-xs text-accent-foreground">
-                    💡 <strong>Променливи, които можете да използвате:</strong>
-                  </p>
-                  <ul className="text-xs text-accent-foreground/80 mt-2 space-y-1 list-disc list-inside">
-                    <li>{`{{side}}`} - ляв или десен ирис</li>
-                    <li>{`{{age}}, {{gender}}, {{weight}}, {{height}}, {{bmi}}`} - данни за пациента</li>
-                    <li>{`{{goals}}, {{complaints}}, {{healthStatus}}`} - здравна информация</li>
-                    <li>{`{{imageHash}}`} - уникален идентификатор на изображението</li>
-                  </ul>
-                </div>
+            <AIPromptTab />
+          </TabsContent>
 
-                <div className="space-y-2">
-                  <Label htmlFor="prompt-editor">Съдържание на промпта</Label>
-                  <Textarea
-                    id="prompt-editor"
-                    value={editedPrompt}
-                    onChange={(e) => setEditedPrompt(e.target.value)}
-                    className="min-h-[500px] font-mono text-sm"
-                    placeholder="AI Prompt шаблон..."
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Този промпт определя как AI интерпретира и анализира ирисовите изображения
-                  </p>
-                </div>
-                
-                <div className="flex gap-2">
-                  <Button onClick={handleSavePrompt} className="flex-1">
-                    <CheckCircle className="w-4 h-4 mr-2" />
-                    Запази промените
-                  </Button>
-                  <Button onClick={handleRestorePrompt} variant="outline">
-                    <ArrowLeft className="w-4 h-4 mr-2" />
-                    Възстанови по подразбиране
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+          {/* Custom Overlay Tab */}
+          <TabsContent value="overlay" className="space-y-6 mt-6">
+            <CustomOverlayTab />
           </TabsContent>
 
           {/* Changelog Tab */}
