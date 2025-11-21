@@ -88,3 +88,83 @@ export interface IridologyTextbook {
   uploadDate: string
   fileSize: number
 }
+
+// PRIORITY 4: Enhanced Types for airis1.0 improvements
+
+export interface AIPromptTemplate {
+  id: string
+  name: string
+  content: string
+  version: number
+  createdAt: string
+  updatedAt: string
+  isDefault?: boolean
+}
+
+export interface IridologyManual {
+  id: string
+  content: string
+  version: number
+  createdAt: string
+  updatedAt: string
+  stats: {
+    lines: number
+    chars: number
+    words: number
+  }
+}
+
+export interface ReportModuleComment {
+  id: string
+  moduleId: string
+  containerId: string
+  text: string
+  createdAt: string
+  updatedAt?: string
+  author?: string
+}
+
+export interface ReportModule {
+  id: string
+  type: 'text' | 'chart' | 'table' | 'image' | 'custom'
+  title: string
+  content: any
+  order: number
+  visible: boolean
+  editable: boolean
+  comments?: ReportModuleComment[]
+}
+
+export interface ReportContainer {
+  id: string
+  name: string
+  modules: ReportModule[]
+  order: number
+  collapsed: boolean
+  visible: boolean
+  comments?: ReportModuleComment[]
+}
+
+export interface EditorModeConfig {
+  enabled: boolean
+  allowReordering: boolean
+  allowComments: boolean
+  allowHiding: boolean
+  allowEditing: boolean
+  showMetadata: boolean
+}
+
+export interface AIModelStrategy {
+  id: string
+  name: string
+  description: string
+  provider: 'openai' | 'gemini' | 'cloudflare'
+  model: string
+  temperature: number
+  maxTokens: number
+  topP: number
+  frequencyPenalty: number
+  presencePenalty: number
+  systemPrompt?: string
+  isDefault?: boolean
+}
