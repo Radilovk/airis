@@ -18,6 +18,8 @@ interface OverlayMap {
   isActive: boolean
 }
 
+const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024 // 5MB
+
 export default function CustomOverlayTab() {
   const [overlayMaps, setOverlayMaps] = useStorage<OverlayMap[]>('custom-overlay-maps', [])
   const [uploading, setUploading] = useState(false)
@@ -33,7 +35,7 @@ export default function CustomOverlayTab() {
     }
 
     // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
+    if (file.size > MAX_FILE_SIZE_BYTES) {
       toast.error('Размерът на файла не трябва да надвишава 5MB')
       return
     }

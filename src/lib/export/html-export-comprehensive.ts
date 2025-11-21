@@ -12,7 +12,9 @@ export function generateComprehensiveHTMLReport(report: AnalysisReport): string 
     minute: '2-digit'
   })
 
-  const bmi = (questionnaireData.weight / ((questionnaireData.height / 100) ** 2)).toFixed(1)
+  const bmi = questionnaireData.height > 0
+    ? (questionnaireData.weight / ((questionnaireData.height / 100) ** 2)).toFixed(1)
+    : '0.0'
   const genderLabel = questionnaireData.gender === 'male' ? 'Мъж' : 
                        questionnaireData.gender === 'female' ? 'Жена' : 'Друго'
 
