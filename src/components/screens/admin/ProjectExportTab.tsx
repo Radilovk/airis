@@ -9,6 +9,7 @@ import { Separator } from '@/components/ui/separator'
 import { toast } from 'sonner'
 import { Download, FileArrowDown, Database, Gear, FileText } from '@phosphor-icons/react'
 import { motion } from 'framer-motion'
+import { calculateBMI } from '@/lib/utils'
 
 export default function ProjectExportTab() {
   const [reports] = useStorage<any[]>('analysis-reports', [])
@@ -124,13 +125,15 @@ export default function ProjectExportTab() {
 
     // CSV rows
     reports.forEach(report => {
+      const bmi = report.questionnaireData?.weight && report.questionnaireData?.height
+        ? calculateBMI(report.questionnaireData.weight, report.questionnaireData.height)
+        : 'N/A'
+      
       const row = [
         new Date(report.timestamp).toLocaleDateString('bg-BG'),
         report.questionnaireData?.age || 'N/A',
         report.questionnaireData?.gender || 'N/A',
-        report.questionnaireData?.weight && report.questionnaireData?.height
-          ? ((report.questionnaireData.weight / Math.pow(report.questionnaireData.height / 100, 2))).toFixed(1)
-          : 'N/A',
+        bmi,
         `"${report.questionnaireData?.complaints?.substring(0, 50) || 'N/A'}"`,
         report.leftIris?.overallHealth || report.rightIris?.overallHealth || 'N/A'
       ]
